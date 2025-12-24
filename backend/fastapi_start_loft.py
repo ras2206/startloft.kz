@@ -18,6 +18,7 @@ from models import (
     RegistrationResponse,
     ClubSettings
 )
+from google_sheets import append_registration_to_sheet
 
 # Rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -177,6 +178,17 @@ async def create_registration(
             raise HTTPException(status_code=500, detail=f"Ошибка сохранения: {str(e)}")
     
     registration_id = await save_to_mongo()
+    
+    # Сохраняем в Google Sheets (не блокирует успех регистрации если произойдет ошибка)
+    try:
+        registration_doc["_id"] = registration_id
+        await append_registration_to_sheet(
+            registration_data=registration_doc,
+            tournament_name=tournament.get("title")
+        )
+    except Exception as e:
+        # Логируем ошибку, но не прерываем процесс регистрации
+        print(f"Warning: Failed to save to Google Sheets: {e}")
     
     # Формируем WhatsApp ссылку
     whatsapp_phone = "7718215088"

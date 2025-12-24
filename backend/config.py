@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
+    # Google Sheets Integration
+    google_sheets_enabled: bool = True
+    google_sheets_credentials_file: Optional[str] = "start-loft-cb70bbfaa5b7.json"
+    google_sheets_spreadsheet_id: Optional[str] = None
 
     class Config:
         env_file = ".env"
