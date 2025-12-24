@@ -13,6 +13,11 @@
 - **Данные**: MongoDB (асинхронный драйвер Motor). Коллекции: tournaments, registrations, club_settings. Slug используется для человекопонятных URL турниров.
   - `_id` конвертируется в строки при возврате из API
   - Datetime поля сериализуются через `.isoformat()`
+- **Google Sheets интеграция**: Двойное сохранение регистраций (MongoDB + Google Sheets) через `backend/google_sheets.py`. Использует gspread + Service Account credentials.
+  - **Fail-safe режим**: регистрация работает даже если Google Sheets недоступен
+  - Асинхронные операции через `asyncio.run_in_executor()` для избежания блокировки event loop
+  - Включается/выключается через `GOOGLE_SHEETS_ENABLED` в `.env`
+  - Автосоздание заголовков при первом запуске
 - **API-контракт**: Pydantic-модели в `backend/models.py` — единственный источник правды. Frontend типы в `frontend/types/index.ts` должны синхронизироваться с backend моделями вручную.
 
 ## Быстрые команды (Local dev)
@@ -46,20 +51,32 @@ docker run -d -p 27017:27017 --name mongo mongo:6.0
 
 - `MONGODB_URI` — connection string (обязательно)
 - `DATABASE_NAME` — имя БД (default: startloft)
-- `ADMIN_TOKEN` — для защищённых admin-эндпоинтов
-- `ADMIN_SYNC_TOKEN` — для синхронизации данных
+- `ADMIN_TOKEN` — для защищённых admin-эндпоинтов (POST `/api/tournaments`)
+- `ADMIN_SYNC_TOKEN` — для синхронизации данных из Google Sheets
 - `FRONTEND_URL` — для CORS (default: http://localhost:3000)
 - `HOST`, `PORT` — сервер настройки (default: 0.0.0.0:8000)
+- `GOOGLE_SHEETS_ENABLED` — включить/выключить интеграцию с Google Sheets (default: true)
+- `GOOGLE_SHEETS_CREDENTIALS_FILE` — путь к JSON с credentials от Service Account
+- `GOOGLE_SHEETS_SPREADSHEET_ID` — ID таблицы Google Sheets для сохранения регистраций
+
+**Frontend переменные окружения:**
+
+- `NEXT_PUBLIC_API_URL` — URL backend API (default: http://localhost:8000)
 
 ## Проектные соглашения и паттерны
 
 - **API-первичность**: изменения в API сначала отражать в `backend/models.py` (Pydantic), затем в `frontend/types/index.ts` и `frontend/lib/api.ts`.
 - **Асинхронность**: backend использует async/await + Motor; пишите асинхронные обработчики и не блокируйте event loop.
+  - **Критично**: sync операции с Google Sheets (gspread) оборачиваются в `asyncio.run_in_executor()` — см. `google_sheets.py`
+  - Паттерн: async функция → `loop.run_in_executor(None, sync_function, args)`
 - **Rate limiting**: эндпоинт `/api/registrations` защищён `@limiter.limit("5/minute")` через SlowAPI.
 - **Security**: admin-эндпоинты (POST `/api/tournaments`) требуют `X-Admin-Token` header.
+- **Fail-safe design**: критичные операции (регистрация) работают даже при падении внешних сервисов (Google Sheets).
+  - Функция возвращает `bool` и логирует ошибки, но не прерывает основной flow
 - **UI**: Tailwind CSS 4.x через `tailwind.config.ts` и глобальные стили в `frontend/app/style.css`. Компоненты — функциональные React/TSX, mobile-first.
 - **App Router**: маршруты в `frontend/app/` с серверными компонентами. Dynamic routes: `tournaments/[slug]/page.tsx`.
 - **Naming**: Python — snake_case (функции/переменные), CamelCase (классы). TypeScript — camelCase (переменные), PascalCase (компоненты/типы).
+- **Caching**: Frontend использует `cache: 'no-store'` в fetch для динамических данных (турниры, регистрации).
 
 ## Важные файлы для быстрого просмотра
 
@@ -72,6 +89,10 @@ docker run -d -p 27017:27017 --name mongo mongo:6.0
   - Используется `Field(alias="_id")` для MongoDB ObjectId
 - `backend/database.py` — подключение к MongoDB через Motor, singleton класс `Database`.
 - `backend/config.py` — настройки через pydantic-settings из `.env`.
+- `backend/google_sheets.py` — интеграция с Google Sheets для двойного сохранения регистраций.
+  - `get_google_sheets_client()` — LRU-кэширование клиента
+  - `append_registration_to_sheet()` — async wrapper для синхронной функции
+  - `_sync_append_to_sheet()` — sync операции с gspread (вызывается через executor)
 - `frontend/lib/api.ts` — клиент для вызовов backend; обновлять синхронно с `backend/models.py`.
   - Использует `fetch` с `cache: 'no-store'` для динамических данных
 - `frontend/types/index.ts` — TypeScript интерфейсы, зеркало Pydantic моделей.
@@ -102,6 +123,7 @@ ssh user@server "cd /srv/startloft && ./scripts/deploy.sh"
 ```
 
 Скрипт автоматически:
+
 - Подтягивает изменения из Git
 - Устанавливает Python и npm зависимости
 - Собирает Next.js build (`npm run build`)

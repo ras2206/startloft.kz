@@ -21,7 +21,7 @@ const COUNTRIES = [
 
 export default function RegistrationPage() {
   const router = useRouter();
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2288";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

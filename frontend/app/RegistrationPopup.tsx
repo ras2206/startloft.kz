@@ -22,7 +22,7 @@ const COUNTRIES = [
 ];
 
 export default function RegistrationPopup({ open, onClose, onSuccess, tournaments }: { open: boolean, onClose: () => void, onSuccess: () => void, tournaments: any[] }) {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2288";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const [form, setForm] = useState({
     fio: "",
     phone: "",
