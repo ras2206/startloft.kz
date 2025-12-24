@@ -149,11 +149,11 @@ async def create_registration(
     registration_doc = {
         "tournament_id": registration.tournament_id,
         "fio": registration.fio,
+        "birth_date": registration.birth_date,
         "phone": registration.phone,
         "category": registration.category,
         "rank": registration.rank,
         "city_country": registration.city_country,
-        "birthdate": registration.birthdate,
         "comment": registration.comment,
         "status": "new",
         "created_at": datetime.utcnow(),
@@ -233,6 +233,7 @@ async def get_tournament_registrations(tournament_id: str):
         public_registrations.append({
             "fio": reg.get("fio"),
             "rank": reg.get("rank"),
+            "category": reg.get("category"),
             "city_country": reg.get("city_country"),
         })
     

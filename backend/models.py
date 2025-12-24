@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Literal
-from datetime import datetime
+from datetime import datetime, date
 import re
 
 
@@ -73,14 +73,24 @@ class RegistrationMeta(BaseModel):
 class RegistrationCreate(BaseModel):
     tournament_id: str
     fio: str
+    birth_date: date  # YYYY-MM-DD
     phone: str
-    category: Literal["Профессионал +", "Профессионал", "Любитель +", "Любитель"]
-    rank: Literal["КМС", "МС", "МСМК", "ЗМС", "Нет звания"]
+    category: Literal["Профессионал",  "Любитель"]
+    rank: Literal["КМС", "МС", "МСМК", "ЗМС", "Не выбрано"]
     city_country: str
-    birthdate: Optional[str] = None
     comment: Optional[str] = None
     consent: bool = True
     honeypot: Optional[str] = None  # Антиспам поле (должно быть пустым)
+
+    @validator('birth_date')
+    def validate_age(cls, v):
+        today = date.today()
+        age = today.year - v.year - ((today.month, today.day) < (v.month, v.day))
+        if age < 5:
+            raise ValueError('Участник должен быть старше 18 лет')
+        if age > 100:
+            raise ValueError('Некорректная дата рождения')
+        return v
 
     @validator('phone')
     def normalize_phone(cls, v):
@@ -108,11 +118,11 @@ class Registration(BaseModel):
     id: Optional[str] = Field(alias="_id", default=None)
     tournament_id: str
     fio: str
+    birth_date: date
     phone: str
     category: str
     rank: str
     city_country: str
-    birthdate: Optional[str] = None
     comment: Optional[str] = None
     status: Literal["new", "confirmed", "cancelled"] = "new"
     created_at: datetime

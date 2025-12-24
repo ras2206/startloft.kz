@@ -4,7 +4,7 @@ Google Sheets integration for saving tournament registrations.
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, date
 from typing import Dict, Any, Optional
 from functools import lru_cache
 
@@ -117,7 +117,7 @@ def _sync_append_to_sheet(
         
         # Проверяем наличие заголовков (первая строка)
         headers = worksheet.row_values(1)
-        if not headers or headers[0] != "ID":
+        if not headers or headers[0] != "Дата создания":
             # Создаем заголовки если их нет
             headers_row = [
                 "Дата создания",
@@ -126,6 +126,7 @@ def _sync_append_to_sheet(
                 "Город/Страна",
                 "Название турнира",
                 "ФИО",
+                "Дата рождения",
                 "Телефон",
                 "ID",
                 "Турнир ID",
@@ -142,6 +143,13 @@ def _sync_append_to_sheet(
         else:
             created_at_str = str(created_at) if created_at else ""
         
+        # Форматируем дату рождения
+        birth_date = registration_data.get("birth_date")
+        if isinstance(birth_date, date):
+            birth_date_str = birth_date.strftime("%d.%m.%Y")
+        else:
+            birth_date_str = str(birth_date) if birth_date else ""
+        
         row_data = [
             created_at_str,
             registration_data.get("category", ""),
@@ -149,6 +157,7 @@ def _sync_append_to_sheet(
             registration_data.get("city_country", ""),
             tournament_name or "",
             registration_data.get("fio", ""),
+            birth_date_str,
             registration_data.get("phone", ""),
             str(registration_data.get("_id", "")),
             str(registration_data.get("tournament_id", ""))

@@ -51,11 +51,11 @@ export interface Tournament {
 export interface RegistrationForm {
   tournament_id: string;
   fio: string;
+  birthDate: string;  // YYYY-MM-DD format
   phone: string;
-  category: 'Профессионал +' | 'Профессионал' | 'Любитель +' | 'Любитель';
-  rank: 'Нет звания' | 'КМС' | 'МС' | 'МСМК' | 'ЗМС';
+  category: 'Профессионал' | 'Любитель';
+  rank: 'Не выбрано' | 'КМС' | 'МС' | 'МСМК' | 'ЗМС';
   city_country: string;
-  birthdate?: string;
   comment?: string;
   consent: boolean;
   honeypot?: string;
@@ -86,5 +86,6 @@ export interface ClubSettings {
 export interface Participant {
   fio: string;
   rank: string;
+  category: string;
   city_country: string;
 }

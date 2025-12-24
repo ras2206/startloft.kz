@@ -16,9 +16,10 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
   const [formData, setFormData] = useState<RegistrationForm>({
     tournament_id: selectedTournament._id,
     fio: '',
+    birthDate: '',
     phone: '',
     category: 'Любитель',
-    rank: 'Нет звания',
+    rank: 'Не выбрано',
     city_country: '',
     consent: true,
     honeypot: '',
@@ -51,6 +52,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
       const normalizedData = {
         ...formData,
         tournament_id: selectedTournamentId,
+        birth_date: formData.birthDate,
         phone: normalizePhone(formData.phone),
         city_country: `${city}, ${country}`,
       };
@@ -65,9 +67,10 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
       setFormData({
         tournament_id: selectedTournamentId,
         fio: '',
+        birthDate: '',
         phone: '',
         category: 'Любитель',
-        rank: 'Нет звания',
+        rank: 'Не выбрано',
         city_country: '',
         consent: true,
         honeypot: '',
@@ -188,6 +191,23 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
       </div>
 
       <div>
+        <label htmlFor="birthDate" style={labelStyle}>
+          Дата рождения <span style={{ color: '#e74c3c' }}>*</span>
+        </label>
+        <input
+          type="date"
+          id="birthDate"
+          required
+          value={formData.birthDate}
+          onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+          style={inputStyle}
+          max={new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split('T')[0]}
+          min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0]}
+        />
+        <p style={{ color: '#666', fontSize: '0.85rem', marginTop: '6px' }}>Участник должен быть старше 18 лет</p>
+      </div>
+
+      <div>
         <label htmlFor="phone" style={labelStyle}>
           Телефон (WhatsApp) <span style={{ color: '#e74c3c' }}>*</span>
         </label>
@@ -253,9 +273,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
           onChange={(e) => setFormData({ ...formData, category: e.target.value as RegistrationForm['category'] })}
           style={inputStyle}
         >
-          <option value="Профессионал +">Профессионал +</option>
           <option value="Профессионал">Профессионал</option>
-          <option value="Любитель +">Любитель +</option>
           <option value="Любитель">Любитель</option>
         </select>
       </div>
@@ -271,7 +289,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
           onChange={(e) => setFormData({ ...formData, rank: e.target.value as any })}
           style={inputStyle}
         >
-          <option value="Нет звания">Нет звания</option>
+          <option value="Не выбрано">Не выбрано</option>
           <option value="КМС">КМС</option>
           <option value="МС">МС</option>
           <option value="МСМК">МСМК</option>
