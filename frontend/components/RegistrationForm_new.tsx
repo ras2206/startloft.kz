@@ -15,6 +15,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
   const [formData, setFormData] = useState<RegistrationForm>({
     tournament_id: selectedTournament._id,
     fio: '',
+    birthDate: '',
     phone: '',
     category: 'Любитель',
     rank: 'КМС',
@@ -35,6 +36,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
       const normalizedData = {
         ...formData,
         tournament_id: selectedTournamentId,
+        birth_date: formData.birthDate,
         phone: normalizePhone(formData.phone),
         city_country: `${city}, ${country}`,
       };
@@ -165,9 +167,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
           onChange={(e) => setFormData({ ...formData, category: e.target.value as RegistrationForm['category'] })}
           style={{ width: '100%', background: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '12px', fontSize: '1rem', color: '#333', outline: 'none' }}
         >
-          <option value="Профессионал +">Профессионал +</option>
           <option value="Профессионал">Профессионал</option>
-          <option value="Любитель +">Любитель +</option>
           <option value="Любитель">Любитель</option>
         </select>
       </div>
@@ -188,7 +188,7 @@ export default function RegistrationFormComponent({ tournaments, initialTourname
           <option value="МС">МС</option>
           <option value="МСМК">МСМК</option>
           <option value="ЗМС">ЗМС</option>
-          <option value="Нет звания">Нет звания</option>
+          <option value="Не выбрано">Не выбрано</option>
         </select>
       </div>
 
